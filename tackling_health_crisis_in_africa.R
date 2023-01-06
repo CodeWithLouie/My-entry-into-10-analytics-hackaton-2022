@@ -2,11 +2,11 @@
 
 library(dplyr)
 
+library(tidyr)
+
 library(readr)
 
-library(ggplot2)
-
-library(ggthemes)
+library(ggplot2); theme_set(theme_minimal())
 
 library(RColorBrewer)
 
@@ -128,102 +128,161 @@ remove(med_doc_per_10k_pop)
 remove(world_pop)
 
 # Exploratory data analysis
-# create a ggplot template 
-
-plottheme <- theme_minimal(
-  base_size = 12,
-  base_family = "serif",
-) +
-  theme(
-    axis.title = element_blank(),
-    line = element_blank()
-  )
-
 # visualising the total number of deaths by country
 
-total.deaths.country <- annual_deaths_cleaned %>% 
+total.deaths.region <- annual_deaths_cleaned %>% 
   group_by(Country) %>% 
   filter(Country %in%
            c("African Region (WHO)", "European Region (WHO)", "North America (WB)",
              "South-East Asia Region (WHO)")) %>% 
-  summarise(Total_death = sum(Deaths, na.rm = TRUE)) %>% 
+  summarise(Total_death = sum(Deaths, na.rm = TRUE)
+  ) %>% 
   arrange(desc(Total_death)) %>% 
-  ggplot(aes(Country, Total_death, fill = Country)) +
-  geom_col() +
+  ggplot(aes(reorder(Country, Total_death), Total_death)) +
+  geom_col(fill = "steelblue") +
   ylab("Death Count") +
-  ggtitle("Total Number of Deaths by Region/Continent") +
+  ggtitle("Deaths by Region/Continent") +
   coord_flip() +
-  plottheme 
+  theme(
+    legend.position = "none",
+    axis.title = element_blank()
+  )
 
-
+total.deaths.region
 
 # visualising the age group of death cases
 
 agegrp.death.plot <- deaths_by_age_grp_cleaned %>% 
-  filter(Year >= 2000 & Country == "Nigeria") %>% 
-  ggplot(aes(Age_Group, Deaths, fill = Age_Group)) +
-  geom_col() +
+  filter(Year >= 2000) %>% 
+  ggplot(aes(reorder(Age_Group, Deaths), Deaths)) +  
+  geom_col(fill = "steelblue") +
   ylab("Deaths") +
-  ggtitle("Number of Deaths by Age Group in Nigeria Since 2000") +
-  plottheme
+  ggtitle("Deaths by Age Group in Nigeria Since 2000") +
+  theme(
+    axis.title.x = element_blank(), 
+    axis.text = element_text(size = 10)
+  )
+
+
+agegrp.death.plot
 
 # Health Expenditure since 2000
 
-healthxp.doc <- health_expenditure %>% 
+health.xp.plot.trend <- health_expenditure %>% 
   inner_join(med_doc_per10k_pop_cleaned, by = c("Country", "Year")) %>% 
-  select(Country, Continent, Health_Expend_percentGDP, MedDoctor_per10k_pop, Year)
-
-# expenditure trends
-
-health.xp.plot.trend <- healthxp.doc %>%
+  select(Country, Continent, Health_Expend_percentGDP, MedDoctor_per10k_pop, Year) %>% 
   group_by(Year, Continent) %>% 
   summarise(MeanExpenditure = mean(Health_Expend_percentGDP, na.rm = TRUE)) %>% 
   ggplot(aes(Year, MeanExpenditure, color = Continent)) +
-  geom_line() +
-  ylab("Mean Health Expenditure") +
-  ggtitle("Mean Health Expenditure as Percentage of GDP Across Continent") +
-  plottheme
-
-# Expenditure
-
-health.xp.plot <- healthxp.doc %>%
-  group_by(Continent) %>% 
-  summarise(MeanExpenditure = mean(Health_Expend_percentGDP, na.rm = TRUE)) %>% 
-  ggplot(aes(Continent, MeanExpenditure, fill = Continent)) +
-  geom_col(fill = "dark red") +
-  ylab("Mean Health Expenditure") +
-  ggtitle("Mean Health Expenditure as Percentage of GDP Across Continent") +
-  plottheme +
+  geom_line(size = 0.8, alpha = 0.5) +
+  ylab("% of GDP") +
+  ggtitle("Mean Health Expenditure Across Continent") +
   theme(
-    legend.position = "top"
-  )
-  
+    axis.title.x = element_blank(),
+    axis.text = element_text(size = 10)
+  ) +
+  scale_x_continuous(breaks = c(2000, 2004, 2008, 2012, 2016, 2020))
 
-# doctor population plot
+health.xp.plot.trend
 
-doc.plot <- healthxp.doc %>% 
-  group_by(Continent) %>% 
-  summarise(MeanDoctorPer10K = mean(MedDoctor_per10k_pop, na.rm = TRUE)) %>% 
-  ggplot(aes(Continent, MeanDoctorPer10K, fill = Continent)) +
-  geom_col() +
-  ylab("Mean Doctor Population") +
-  ggtitle("Mean Doctor Per 10k Population Across Continent") +
-  plottheme +
-  theme(
-    legend.position = "top"
-  )
+# doctor population percentage of current populatiom
+
+doc.pop <- med_doc_per10k_pop_cleaned %>% 
+  inner_join(world_pop_cleaned, by = c("Country", "Year")) %>% 
+  group_by(Year, Continent) %>% 
+  summarise(
+    Doctor_pop_percent = sum(round((MedDoctor_per10k_pop/Population) * 100, 2))
+    ) %>% 
+  ggplot(aes(Year, Doctor_pop_percent, colour = Continent)) +
+  geom_line(size = 0.8, alpha = 0.5) +
+  scale_x_continuous(breaks = c(2000, 2003, 2006, 2009, 2012, 2015, 2018, 2021, 2024)) +
+  scale_y_log10() +
+  ggtitle("Doctor Population as Percentage of Population Across Continents Since 2000") +
+  theme(axis.title = element_blank())
+
+doc.pop
 
 # exploring the leading causes of deaths 
 
 leading.deaths <- annual_deaths_cleaned %>% 
+  filter(Year >= 2000) %>% 
   group_by(Cause) %>% 
   summarise(TotalDeaths = sum(Deaths, na.rm = TRUE)) %>% 
-  arrange(desc(TotalDeaths)) %>% 
   ggplot(aes(reorder(Cause, TotalDeaths),TotalDeaths)) +
-  geom_col() +
+  geom_col(fill = "steelblue") +
   coord_flip() +
-  plottheme
+  theme(
+    axis.title = element_blank()
+  ) +
+  ggtitle("Leading Causes of Deaths in the World Since 2000")
+
+leading.deaths
+
+# Deaths by age group
+
+agegrp.death.nigeria <- deaths_by_age_grp_cleaned %>%
+  filter(Year >= 2000 & Country == "Nigeria") %>%
+  ggplot(aes(Age_Group, Deaths)) +
+  geom_col(fill = "steelblue") +
+  ylab("Deaths") +
+  ggtitle("Deaths by Age Group in Nigeria Since 2000") +
+  theme(
+    axis.title.x = element_blank(),
+    axis.text = element_text(size = 10)
+  )
+
+agegrp.death.nigeria
+
+# health expenditure in nigeria
+
+health.xp.doc <- health_expenditure %>% 
+  inner_join(med_doc_per10k_pop_cleaned, by = c("Country", "Year")) %>% 
+  select(Country, Health_Expend_percentGDP, MedDoctor_per10k_pop, Year)
 
 
+health.xp.plot.naija <- health.xp.doc %>% 
+  group_by(Year) %>% 
+  filter(Country == "Nigeria") %>% 
+  summarise(MeanExpenditure = mean(Health_Expend_percentGDP, na.rm = TRUE)) %>% 
+  ggplot(aes(Year, MeanExpenditure)) +
+  geom_line(size = 0.8, alpha = 0.5) +
+  ylab("% of GDP") +
+  ggtitle("Mean Health Expenditure in Nigeria") +
+  theme(
+    axis.title.x = element_blank(),
+    axis.text = element_text(size = 10)
+  ) +
+  scale_x_continuous(breaks = c(2000, 2004, 2008, 2012, 2016, 2020))
 
-# to be coninued
+health.xp.plot.naija
+
+# doctor population percentage of current populatiom
+
+doc.pop.naija <- health.xp.doc %>% 
+  inner_join(world_pop_cleaned, by = c("Country", "Year")) %>% 
+  filter(Country == "Nigeria") %>% 
+  group_by(Year) %>%
+  ggplot(aes(Year, MedDoctor_per10k_pop)) +
+  geom_line(size = 0.8, alpha = 0.5) +
+  scale_x_continuous(breaks = c(2000, 2003, 2006, 2009, 2012, 2015, 2018, 2021, 2024)) +
+  ggtitle("Doctor Population in Nigeria Since 2000") +
+  theme(axis.title = element_blank()) +
+  labs(subtitle = "Source: WHO")
+
+doc.pop.naija
+
+# exploring the leading causes of deaths 
+
+leading.deaths <- annual_deaths_cleaned %>% 
+  filter(Year >= 2000 & Country == "Nigeria") %>% 
+  group_by(Cause) %>% 
+  summarise(TotalDeaths = sum(Deaths, na.rm = TRUE)) %>% 
+  ggplot(aes(reorder(Cause, TotalDeaths),TotalDeaths)) +
+  geom_col(fill = "steelblue") +
+  coord_flip() +
+  theme(
+    axis.title = element_blank()
+  ) +
+  ggtitle("Leading Causes of Deaths in Nigeria Since 2000")
+
+leading.deaths
