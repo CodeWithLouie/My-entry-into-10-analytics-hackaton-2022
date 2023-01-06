@@ -157,7 +157,7 @@ agegrp.death.plot <- deaths_by_age_grp_cleaned %>%
   ggplot(aes(reorder(Age_Group, Deaths), Deaths)) +  
   geom_col(fill = "steelblue") +
   ylab("Deaths") +
-  ggtitle("Deaths by Age Group in Nigeria Since 2000") +
+  ggtitle("Deaths by Age Group in the World Since 2000") +
   theme(
     axis.title.x = element_blank(), 
     axis.text = element_text(size = 10)
