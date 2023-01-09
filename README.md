@@ -57,7 +57,7 @@ These analysis was carried out as part of my entry into the 10Anlytics Hackaton 
 My sincere appreciation goes to the 10Anlytics and Mustard Insights team for giving me the opportunity to work on this project.
 
 ### Feedback
-If you have any feedback, please reach out at pradnyapatil671@gmail.com
+If you have any feedback, please reach out at write.ethereal@gmail.com
 
 ### 🚀 About Me
 Hi, I'm Salisu! 👋
