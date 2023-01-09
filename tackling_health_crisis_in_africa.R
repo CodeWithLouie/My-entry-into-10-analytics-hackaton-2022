@@ -8,8 +8,6 @@ library(readr)
 
 library(ggplot2); theme_set(theme_minimal())
 
-library(RColorBrewer)
-
 library(readxl)
 
 # import dataset 
