@@ -56,6 +56,9 @@ These analysis was carried out as part of my entry into the 10Anlytics Hackaton 
 
 My sincere appreciation goes to the 10Anlytics and Mustard Insights team for giving me the opportunity to work on this project.
 
-I hope you find the analysis interesting.
+### Feedback
+If you have any feedback, please reach out at pradnyapatil671@gmail.com
 
-Kind regards.
+### 🚀 About Me
+Hi, I'm Salisu! 👋
+I am an AI Enthusiast and Data science & ML practitioner
